@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>訂便當</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="訂便當">
+<meta name="theme-color" content="#d9822b">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-180.png">
+<style>
+:root {
+  --bg: #f6f5f2; --card: #ffffff; --ink: #1f2420; --muted: #6b716c; --line: #e3e1db;
+  --accent: #d9822b;
+  --red: #e0453a; --red-bg: #fde4e1;
+  --yellow: #e8b100; --yellow-bg: #fff3c4;
+  --green: #2e9b5e; --green-bg: #dcf3e4;
+  --gray: #9a9e9a; --gray-bg: #ecebe7;
+  --today: #2f6fd6;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #161816; --card: #222522; --ink: #ecefe9; --muted: #9aa09a; --line: #353935;
+    --accent: #f0a050;
+    --red: #ff6b5e; --red-bg: #4a2320;
+    --yellow: #f5c931; --yellow-bg: #4a3d12;
+    --green: #4fc983; --green-bg: #1d3d2a;
+    --gray: #8a8f8a; --gray-bg: #2e312e;
+    --today: #6ea2ff;
+  }
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin: 0; background: var(--bg); color: var(--ink); }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang TC", "Noto Sans TC", "Microsoft JhengHei", sans-serif;
+  padding: calc(env(safe-area-inset-top) + 8px) 10px calc(env(safe-area-inset-bottom) + 16px);
+  max-width: 560px; margin: 0 auto;
+}
+button { font: inherit; color: inherit; }
+header { display: flex; align-items: center; gap: 6px; margin: 4px 0 10px; }
+header h1 { flex: 1; text-align: center; font-size: 22px; margin: 0; font-weight: 700; }
+.nav { width: 44px; height: 44px; border-radius: 12px; border: 1px solid var(--line); background: var(--card); font-size: 22px; }
+.small-btn { height: 36px; padding: 0 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--card); font-size: 15px; }
+.modes { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; background: var(--gray-bg); padding: 4px; border-radius: 12px; margin-bottom: 8px; }
+.mode { height: 40px; border: none; border-radius: 9px; background: transparent; font-size: 15px; font-weight: 600; color: var(--muted); }
+.mode.sel { background: var(--card); color: var(--ink); box-shadow: 0 1px 3px rgba(0,0,0,.12); }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 12px; font-size: 13px; color: var(--muted); margin: 0 2px 8px; }
+.legend span { display: inline-flex; align-items: center; gap: 4px; }
+.dot { width: 12px; height: 12px; border-radius: 4px; display: inline-block; }
+.dot.work { background: var(--yellow-bg); border: 1px solid var(--yellow); }
+.summary { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; font-size: 15px; margin-bottom: 10px; line-height: 1.6; }
+.summary b.red { color: var(--red); }
+.summary b.green { color: var(--green); }
+.weekdays, .grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+.weekdays div { text-align: center; font-size: 13px; color: var(--muted); padding: 4px 0; }
+.weekdays .we { color: var(--red); }
+.cell {
+  height: 78px; min-width: 0; overflow: hidden; border-radius: 10px; background: var(--card); border: 1px solid var(--line);
+  padding: 3px; display: flex; flex-direction: column; align-items: stretch; gap: 3px; text-align: left; cursor: pointer;
+}
+.cell.empty { background: transparent; border: none; cursor: default; }
+.cell.work { background: var(--yellow-bg); border-color: var(--yellow); }
+.cell.past { opacity: .6; }
+.cell.today { outline: 2px solid var(--today); outline-offset: -2px; }
+.num { font-size: 15px; font-weight: 600; padding-left: 2px; line-height: 20px; }
+.cell.today .num { color: var(--today); }
+.slot { font-size: 12px; line-height: 22px; border-radius: 5px; text-align: center; font-weight: 600; border: none; padding: 0; white-space: nowrap; overflow: hidden; }
+.s-none { background: var(--card); color: var(--red); box-shadow: inset 0 0 0 1px var(--red); }
+.s-ok { background: var(--green-bg); color: var(--green); }
+.s-skip { background: var(--gray-bg); color: var(--gray); text-decoration: line-through; }
+.mode-work .slot { pointer-events: none; }
+.footer { display: flex; justify-content: center; gap: 8px; margin-top: 14px; }
+
+.backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.35); display: none; z-index: 10; }
+.backdrop.show { display: block; }
+.sheet {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 11; background: var(--card);
+  border-radius: 18px 18px 0 0; padding: 14px 16px calc(env(safe-area-inset-bottom) + 18px);
+  max-width: 560px; margin: 0 auto; transform: translateY(105%); transition: transform .2s ease;
+  max-height: 88vh; overflow-y: auto;
+}
+.sheet.show { transform: none; }
+.sheet h2 { margin: 0 0 12px; font-size: 20px; display: flex; align-items: center; }
+.sheet h2 span { flex: 1; }
+.close { border: none; background: var(--gray-bg); width: 36px; height: 36px; border-radius: 50%; font-size: 18px; }
+.row-label { font-size: 15px; font-weight: 600; margin: 12px 0 6px; }
+.wide-btn { width: 100%; height: 46px; border-radius: 12px; border: 1px solid var(--line); background: var(--bg); font-size: 16px; margin-top: 8px; }
+.hint { font-size: 13px; color: var(--muted); line-height: 1.5; }
+.sync { font-size: 12px; color: var(--muted); text-align: center; margin-top: 10px; }
+.sync.bad { color: var(--red); }
+#login { display: flex; flex-direction: column; gap: 10px; max-width: 360px; margin: 40px auto; }
+#login h1 { font-size: 24px; margin: 0 0 6px; text-align: center; }
+#login input { height: 48px; border-radius: 10px; border: 1px solid var(--line); background: var(--card); color: var(--ink); padding: 0 12px; font-size: 16px; }
+#login button { height: 48px; border-radius: 12px; border: none; background: var(--accent); color: #fff; font-size: 17px; font-weight: 600; }
+#loginErr { color: var(--red); font-size: 14px; min-height: 1.4em; }
+[hidden] { display: none !important; }
+#err { display: none; background: var(--red-bg); color: var(--red); padding: 8px; border-radius: 8px; margin-bottom: 8px; }
+</style>
+</head>
+<body>
+<div id="err"></div>
+<form id="login" hidden>
+  <h1>訂便當</h1>
+  <p class="hint">用洗腎叫車同一組帳號登入。每支手機、每台電腦只要登入一次。</p>
+  <input id="email" type="email" autocomplete="username" placeholder="Email" required>
+  <input id="password" type="password" autocomplete="current-password" placeholder="密碼" required>
+  <button type="submit" id="loginBtn">登入</button>
+  <div id="loginErr"></div>
+</form>
+<main id="app" hidden>
+<header>
+  <button class="nav" id="prev" aria-label="上個月">‹</button>
+  <h1 id="title"></h1>
+  <button class="nav" id="next" aria-label="下個月">›</button>
+</header>
+<div class="modes">
+  <button class="mode" data-mode="work">① 點上班日</button>
+  <button class="mode" data-mode="bento">② 標便當</button>
+</div>
+<div class="legend" id="legend"></div>
+<div class="summary" id="summary"></div>
+<div class="weekdays"><div>一</div><div>二</div><div>三</div><div>四</div><div>五</div><div class="we">六</div><div class="we">日</div></div>
+<div class="grid" id="grid"></div>
+<div class="footer">
+  <button class="small-btn" id="todayBtn">回到本月</button>
+  <button class="small-btn" id="settingsBtn">設定</button>
+</div>
+<div class="sync" id="sync">連線中…</div>
+</main>
+
+<div class="backdrop" id="backdrop"></div>
+
+<div class="sheet" id="setSheet">
+  <h2><span>設定</span><button class="close" data-close>✕</button></h2>
+  <div class="row-label">帳號</div>
+  <p class="hint">資料存在雲端，手機和電腦同步。目前登入：<span id="who"></span></p>
+  <button class="wide-btn" id="logoutBtn">登出</button>
+  <p class="hint" id="ver"></p>
+</div>
+
+<script>
+window.APP_VERSION = '1';
+window.addEventListener('error', (e) => {
+  const d = document.getElementById('err');
+  if (d) { d.style.display = 'block'; d.textContent = '程式出錯：' + (e.message || e) + '（版本 ' + window.APP_VERSION + '）'; }
+});
+</script>
+<script type="module" src="app.js?v=1"></script>
+</body>
+</html>

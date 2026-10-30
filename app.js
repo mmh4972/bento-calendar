@@ -5,7 +5,7 @@ import {
   initializeFirestore, persistentLocalCache, persistentMultipleTabManager,
   collection, doc, onSnapshot, setDoc, deleteDoc,
 } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
-import { firebaseConfig } from './firebase-config.js?v=2';
+import { firebaseConfig } from './firebase-config.js?v=3';
 
 // 點一下換下一個狀態
 const STATUS = [
@@ -50,22 +50,27 @@ function render() {
   const grid = $('grid');
   grid.className = 'grid mode-' + mode;
   grid.innerHTML = '';
-  const lead = (view.getDay() + 6) % 7; // 週一為第一欄
-  for (let i = 0; i < lead; i++) grid.appendChild(Object.assign(document.createElement('div'), { className: 'cell empty' }));
+  // 前後補上相鄰月份的日子，湊滿整週（週一為第一欄）；這些日子也能點，但不算進本月統計
+  const lead = (view.getDay() + 6) % 7;
+  const last = new Date(y, m + 1, 0).getDate();
+  const total = Math.ceil((lead + last) / 7) * 7;
+  grid.style.setProperty('--rows', total / 7);
 
   const tk = todayKey();
   const count = { work: 0, lunchOk: 0, lunchNone: 0, dinnerOk: 0, dinnerNone: 0 };
-  for (const key of monthKeys()) {
+  for (let i = 0; i < total; i++) {
+    const key = keyOf(new Date(y, m, i - lead + 1));
+    const inMonth = i >= lead && i < lead + last;
     const r = rec(key);
     const cell = document.createElement('div');
-    cell.className = 'cell' + (r.work ? ' work' : '') + (key === tk ? ' today' : '') + (key < tk ? ' past' : '');
+    cell.className = 'cell' + (r.work ? ' work' : '') + (key === tk ? ' today' : '') + (key < tk ? ' past' : '') + (inMonth ? '' : ' other');
     cell.innerHTML = '<span class="num">' + Number(key.slice(8)) + '</span>';
     if (r.work) {
-      count.work++;
+      if (inMonth) count.work++;
       for (const meal of MEALS) {
         const s = statusOf(r[meal.id]);
-        if (s.id === 'ok') count[meal.id + 'Ok']++;
-        if (s.id === '') count[meal.id + 'None']++;
+        if (inMonth && s.id === 'ok') count[meal.id + 'Ok']++;
+        if (inMonth && s.id === '') count[meal.id + 'None']++;
         const b = document.createElement('button');
         b.className = 'slot ' + s.cls;
         b.textContent = meal.name + ' ' + s.label;

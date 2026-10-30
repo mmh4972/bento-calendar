@@ -36,7 +36,7 @@
 html, body { margin: 0; background: var(--bg); color: var(--ink); }
 body {
   font-family: -apple-system, BlinkMacSystemFont, "PingFang TC", "Noto Sans TC", "Microsoft JhengHei", sans-serif;
-  padding: calc(env(safe-area-inset-top) + 8px) 10px calc(env(safe-area-inset-bottom) + 16px);
+  padding: calc(env(safe-area-inset-top) + 8px) 6px calc(env(safe-area-inset-bottom) + 10px);
   max-width: 560px; margin: 0 auto;
 }
 button { font: inherit; color: inherit; }
@@ -54,20 +54,23 @@ header h1 { flex: 1; text-align: center; font-size: 22px; margin: 0; font-weight
 .summary { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; font-size: 15px; margin-bottom: 10px; line-height: 1.6; }
 .summary b.red { color: var(--red); }
 .summary b.green { color: var(--green); }
-.weekdays, .grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+/* 月曆撐滿螢幕剩下的高度 */
+#app { display: flex; flex-direction: column; min-height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 18px); }
+.weekdays, .grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 3px; }
+.grid { flex: 1; grid-template-rows: repeat(var(--rows, 5), minmax(84px, 1fr)); }
 .weekdays div { text-align: center; font-size: 13px; color: var(--muted); padding: 4px 0; }
 .weekdays .we { color: var(--red); }
 .cell {
-  height: 78px; min-width: 0; overflow: hidden; border-radius: 10px; background: var(--card); border: 1px solid var(--line);
+  min-width: 0; overflow: hidden; border-radius: 10px; background: var(--card); border: 1px solid var(--line);
   padding: 3px; display: flex; flex-direction: column; align-items: stretch; gap: 3px; text-align: left; cursor: pointer;
 }
-.cell.empty { background: transparent; border: none; cursor: default; }
 .cell.work { background: var(--yellow-bg); border-color: var(--yellow); }
 .cell.past { opacity: .6; }
+.cell.other { opacity: .35; }
 .cell.today { outline: 2px solid var(--today); outline-offset: -2px; }
-.num { font-size: 15px; font-weight: 600; padding-left: 2px; line-height: 20px; }
+.num { font-size: 16px; font-weight: 600; padding-left: 2px; line-height: 20px; }
 .cell.today .num { color: var(--today); }
-.slot { font-size: 12px; line-height: 22px; border-radius: 5px; text-align: center; font-weight: 600; border: none; padding: 0; white-space: nowrap; overflow: hidden; }
+.slot { font-size: 13px; line-height: 26px; border-radius: 5px; text-align: center; font-weight: 600; border: none; padding: 0; white-space: nowrap; overflow: hidden; }
 .s-none { background: var(--card); color: var(--red); box-shadow: inset 0 0 0 1px var(--red); }
 .s-ok { background: var(--green-bg); color: var(--green); }
 .s-skip { background: var(--gray-bg); color: var(--gray); text-decoration: line-through; }
@@ -142,12 +145,12 @@ header h1 { flex: 1; text-align: center; font-size: 22px; margin: 0; font-weight
 </div>
 
 <script>
-window.APP_VERSION = '2';
+window.APP_VERSION = '3';
 window.addEventListener('error', (e) => {
   const d = document.getElementById('err');
   if (d) { d.style.display = 'block'; d.textContent = '程式出錯：' + (e.message || e) + '（版本 ' + window.APP_VERSION + '）'; }
 });
 </script>
-<script type="module" src="app.js?v=2"></script>
+<script type="module" src="app.js?v=3"></script>
 </body>
 </html>

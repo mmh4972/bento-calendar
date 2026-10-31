@@ -16,7 +16,7 @@
   --bg: #f6f5f2; --card: #ffffff; --ink: #1f2420; --muted: #6b716c; --line: #e3e1db;
   --accent: #d9822b;
   --red: #e0453a; --red-bg: #fde4e1;
-  --yellow: #e8b100; --yellow-bg: #fff3c4;
+  --yellow: #e8b100; --yellow-bg: #ffe98a; --later-bg: #fff8dc;
   --green: #2e9b5e; --green-bg: #dcf3e4;
   --gray: #9a9e9a; --gray-bg: #ecebe7;
   --today: #2f6fd6;
@@ -26,7 +26,7 @@
     --bg: #161816; --card: #222522; --ink: #ecefe9; --muted: #9aa09a; --line: #353935;
     --accent: #f0a050;
     --red: #ff6b5e; --red-bg: #4a2320;
-    --yellow: #f5c931; --yellow-bg: #4a3d12;
+    --yellow: #f5c931; --yellow-bg: #5c4b10; --later-bg: #332c14;
     --green: #4fc983; --green-bg: #1d3d2a;
     --gray: #8a8f8a; --gray-bg: #2e312e;
     --today: #6ea2ff;
@@ -51,6 +51,7 @@ header h1 { flex: 1; text-align: center; font-size: 22px; margin: 0; font-weight
 .legend span { display: inline-flex; align-items: center; gap: 4px; }
 .dot { width: 12px; height: 12px; border-radius: 4px; display: inline-block; }
 .dot.work { background: var(--yellow-bg); border: 1px solid var(--yellow); }
+.dot.work.later { background: var(--later-bg); border: 1px dashed var(--yellow); }
 .summary { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; font-size: 15px; margin-bottom: 10px; line-height: 1.6; }
 .summary b.red { color: var(--red); }
 .summary b.green { color: var(--green); }
@@ -65,6 +66,8 @@ header h1 { flex: 1; text-align: center; font-size: 22px; margin: 0; font-weight
   padding: 3px; display: flex; flex-direction: column; align-items: stretch; gap: 3px; text-align: left; cursor: pointer;
 }
 .cell.work { background: var(--yellow-bg); border-color: var(--yellow); }
+/* 超過一週、醫院系統還不能訂的上班日：淺黃＋虛線 */
+.cell.work.later { background: var(--later-bg); border-style: dashed; }
 .cell.past { opacity: .6; }
 .cell.other { opacity: .35; }
 .cell.today { outline: 2px solid var(--today); outline-offset: -2px; }
@@ -145,12 +148,12 @@ header h1 { flex: 1; text-align: center; font-size: 22px; margin: 0; font-weight
 </div>
 
 <script>
-window.APP_VERSION = '3';
+window.APP_VERSION = '4';
 window.addEventListener('error', (e) => {
   const d = document.getElementById('err');
   if (d) { d.style.display = 'block'; d.textContent = '程式出錯：' + (e.message || e) + '（版本 ' + window.APP_VERSION + '）'; }
 });
 </script>
-<script type="module" src="app.js?v=3"></script>
+<script type="module" src="app.js?v=4"></script>
 </body>
 </html>

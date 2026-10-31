@@ -5,7 +5,7 @@ import {
   initializeFirestore, persistentLocalCache, persistentMultipleTabManager,
   collection, doc, onSnapshot, setDoc, deleteDoc,
 } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
-import { firebaseConfig } from './firebase-config.js?v=3';
+import { firebaseConfig } from './firebase-config.js?v=4';
 
 // 點一下換下一個狀態
 const STATUS = [
@@ -14,6 +14,8 @@ const STATUS = [
   { id: 'skip', label: '不用', cls: 's-skip' },
 ];
 const MEALS = [{ id: 'lunch', name: '午' }, { id: 'dinner', name: '晚' }];
+const BOOK_DAYS = 7;                   // 醫院系統只能訂一週內（今天起 7 天，例如週六可訂到下週五）
+const WD_NAMES = ['日', '一', '二', '三', '四', '五', '六'];
 const $ = (id) => document.getElementById(id);
 
 let days = {};                         // { '2026-10-31': { work: true, lunch: 'ok', dinner: 'skip' } }
@@ -27,6 +29,8 @@ function keyOf(d) {
   return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
 }
 function todayKey() { return keyOf(new Date()); }
+// 現在最晚能訂到哪一天
+function limitDate() { const d = new Date(); d.setDate(d.getDate() + BOOK_DAYS - 1); return d; }
 function rec(key) { return days[key] || {}; }
 function statusOf(id) { return STATUS.find((s) => s.id === (id || '')) || STATUS[0]; }
 function monthKeys() {
@@ -45,7 +49,7 @@ function render() {
   const y = view.getFullYear(), m = view.getMonth();
   $('title').textContent = y + ' 年 ' + (m + 1) + ' 月';
   $('legend').innerHTML = mode === 'work'
-    ? '<span>點日子切換：</span><span><i class="dot work"></i>有上班</span><span>白色＝沒上班</span>'
+    ? '<span>點日子切換：</span><span><i class="dot work"></i>有上班</span><span><i class="dot work later"></i>還不能訂</span><span>白色＝沒上班</span>'
     : '<span>點午／晚切換：</span><span><i class="dot s-none"></i>未訂</span><span><i class="dot s-ok"></i>訂到</span><span><i class="dot s-skip"></i>不用</span>';
   const grid = $('grid');
   grid.className = 'grid mode-' + mode;
@@ -57,13 +61,16 @@ function render() {
   grid.style.setProperty('--rows', total / 7);
 
   const tk = todayKey();
+  const limit = limitDate();
+  const lk = keyOf(limit);
+  let open = 0; // 現在就能訂、還沒訂的格數
   const count = { work: 0, lunchOk: 0, lunchNone: 0, dinnerOk: 0, dinnerNone: 0 };
   for (let i = 0; i < total; i++) {
     const key = keyOf(new Date(y, m, i - lead + 1));
     const inMonth = i >= lead && i < lead + last;
     const r = rec(key);
     const cell = document.createElement('div');
-    cell.className = 'cell' + (r.work ? ' work' : '') + (key === tk ? ' today' : '') + (key < tk ? ' past' : '') + (inMonth ? '' : ' other');
+    cell.className = 'cell' + (r.work ? ' work' : '') + (key === tk ? ' today' : '') + (key < tk ? ' past' : '') + (inMonth ? '' : ' other') + (r.work && key > lk ? ' later' : '');
     cell.innerHTML = '<span class="num">' + Number(key.slice(8)) + '</span>';
     if (r.work) {
       if (inMonth) count.work++;
@@ -71,6 +78,7 @@ function render() {
         const s = statusOf(r[meal.id]);
         if (inMonth && s.id === 'ok') count[meal.id + 'Ok']++;
         if (inMonth && s.id === '') count[meal.id + 'None']++;
+        if (s.id === '' && key >= tk && key <= lk) open++;
         const b = document.createElement('button');
         b.className = 'slot ' + s.cls;
         b.textContent = meal.name + ' ' + s.label;
@@ -90,13 +98,15 @@ function render() {
     grid.appendChild(cell);
   }
 
+  const canBook = '現在可以訂到 <b>' + (limit.getMonth() + 1) + '/' + limit.getDate() + '（' + WD_NAMES[limit.getDay()] + '）</b>' +
+    (open ? '，還有 <b class="red">' + open + '</b> 格可以訂' : '');
   if (!count.work) {
-    $('summary').textContent = mode === 'work'
+    $('summary').innerHTML = (mode === 'work'
       ? '這個月還沒點上班日。直接點日子，有上班的會變黃色。'
-      : '這個月還沒有上班日，請先切到「① 點上班日」。';
+      : '這個月還沒有上班日，請先切到「① 點上班日」。') + '<br>' + canBook;
   } else {
     const part = (name, ok, none) => name + '：<b class="green">' + ok + '</b> 天訂到' + (none ? '、<b class="red">' + none + '</b> 天未訂' : '');
-    $('summary').innerHTML = '這個月上班 <b>' + count.work + '</b> 天<br>' +
+    $('summary').innerHTML = canBook + '<br>這個月上班 <b>' + count.work + '</b> 天<br>' +
       part('午餐', count.lunchOk, count.lunchNone) + '<br>' + part('晚餐', count.dinnerOk, count.dinnerNone);
   }
 }
@@ -149,6 +159,9 @@ $('prev').addEventListener('click', () => { view = new Date(view.getFullYear(), 
 $('next').addEventListener('click', () => { view = new Date(view.getFullYear(), view.getMonth() + 1, 1); render(); });
 $('todayBtn').addEventListener('click', () => { view = firstOfMonth(new Date()); render(); });
 $('settingsBtn').addEventListener('click', () => { $('ver').textContent = '版本 ' + window.APP_VERSION; show('setSheet'); });
+
+// 隔天再打開時，可訂日期要跟著往後推
+document.addEventListener('visibilitychange', () => { if (!document.hidden && mode) render(); });
 
 // 左右滑動換月
 let sx = null;

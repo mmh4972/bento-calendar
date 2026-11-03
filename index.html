@@ -59,10 +59,11 @@ header h1 { flex: 1; text-align: center; font-size: 22px; margin: 0; font-weight
 #app { display: flex; flex-direction: column; min-height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 18px); }
 .weekdays, .grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 3px; }
 .grid { flex: 1; grid-template-rows: repeat(var(--rows, 5), minmax(84px, 1fr)); }
+/* 每格內容高度固定（日期＋午＋晚），寫了原因也不會把格子撐開 */
 .weekdays div { text-align: center; font-size: 13px; color: var(--muted); padding: 4px 0; }
 .weekdays .we { color: var(--red); }
 .cell {
-  min-width: 0; overflow: hidden; border-radius: 10px; background: var(--card); border: 1px solid var(--line);
+  min-width: 0; min-height: 0; overflow: hidden; border-radius: 10px; background: var(--card); border: 1px solid var(--line);
   padding: 3px; display: flex; flex-direction: column; align-items: stretch; gap: 3px; text-align: left; cursor: pointer;
 }
 .cell.work { background: var(--yellow-bg); border-color: var(--yellow); }
@@ -73,10 +74,10 @@ header h1 { flex: 1; text-align: center; font-size: 22px; margin: 0; font-weight
 .cell.today { outline: 2px solid var(--today); outline-offset: -2px; }
 .num { font-size: 16px; font-weight: 600; padding-left: 2px; line-height: 20px; }
 .cell.today .num { color: var(--today); }
-.slot { font-size: 13px; line-height: 26px; border-radius: 5px; text-align: center; font-weight: 600; border: none; padding: 0; white-space: nowrap; overflow: hidden; }
+.slot { font-size: 13px; line-height: 26px; letter-spacing: -.5px; border-radius: 5px; text-align: center; font-weight: 600; border: none; padding: 0 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: none; }
 .s-none { background: var(--card); color: var(--red); box-shadow: inset 0 0 0 1px var(--red); }
 .s-ok { background: var(--green-bg); color: var(--green); }
-.s-skip { background: var(--gray-bg); color: var(--gray); text-decoration: line-through; }
+.s-skip { background: var(--gray-bg); color: var(--gray); }
 .mode-work .slot { pointer-events: none; }
 .footer { display: flex; justify-content: center; gap: 8px; margin-top: 14px; }
 
@@ -94,6 +95,10 @@ header h1 { flex: 1; text-align: center; font-size: 22px; margin: 0; font-weight
 .close { border: none; background: var(--gray-bg); width: 36px; height: 36px; border-radius: 50%; font-size: 18px; }
 .row-label { font-size: 15px; font-weight: 600; margin: 12px 0 6px; }
 .wide-btn { width: 100%; height: 46px; border-radius: 12px; border: 1px solid var(--line); background: var(--bg); font-size: 16px; margin-top: 8px; }
+#skipNote { width: 100%; height: 48px; border-radius: 10px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); padding: 0 12px; font: inherit; font-size: 16px; }
+.btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+.btn-row .wide-btn { margin: 0; }
+.wide-btn.primary { background: var(--accent); color: #fff; border: none; font-weight: 600; }
 .hint { font-size: 13px; color: var(--muted); line-height: 1.5; }
 .sync { font-size: 12px; color: var(--muted); text-align: center; margin-top: 10px; }
 .sync.bad { color: var(--red); }
@@ -139,6 +144,16 @@ header h1 { flex: 1; text-align: center; font-size: 22px; margin: 0; font-weight
 
 <div class="backdrop" id="backdrop"></div>
 
+<div class="sheet" id="noteSheet">
+  <h2><span id="noteTitle"></span><button class="close" data-close>✕</button></h2>
+  <div class="row-label">為什麼不用？</div>
+  <input id="skipNote" type="text" maxlength="40" placeholder="例如：休假、開會、自己帶" enterkeyhint="done">
+  <div class="btn-row">
+    <button class="wide-btn" id="noteReset">改回未訂</button>
+    <button class="wide-btn primary" id="noteDone">完成</button>
+  </div>
+</div>
+
 <div class="sheet" id="setSheet">
   <h2><span>設定</span><button class="close" data-close>✕</button></h2>
   <div class="row-label">帳號</div>
@@ -148,12 +163,12 @@ header h1 { flex: 1; text-align: center; font-size: 22px; margin: 0; font-weight
 </div>
 
 <script>
-window.APP_VERSION = '4';
+window.APP_VERSION = '5';
 window.addEventListener('error', (e) => {
   const d = document.getElementById('err');
   if (d) { d.style.display = 'block'; d.textContent = '程式出錯：' + (e.message || e) + '（版本 ' + window.APP_VERSION + '）'; }
 });
 </script>
-<script type="module" src="app.js?v=4"></script>
+<script type="module" src="app.js?v=5"></script>
 </body>
 </html>

@@ -5,7 +5,7 @@ import {
   initializeFirestore, persistentLocalCache, persistentMultipleTabManager,
   collection, doc, onSnapshot, setDoc, deleteDoc,
 } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
-import { firebaseConfig } from './firebase-config.js?v=4';
+import { firebaseConfig } from './firebase-config.js?v=5';
 
 // 點一下換下一個狀態
 const STATUS = [
@@ -18,7 +18,7 @@ const BOOK_DAYS = 7;                   // 醫院系統只能訂一週內（今�
 const WD_NAMES = ['日', '一', '二', '三', '四', '五', '六'];
 const $ = (id) => document.getElementById(id);
 
-let days = {};                         // { '2026-10-31': { work: true, lunch: 'ok', dinner: 'skip' } }
+let days = {};                         // { '2026-10-31': { work: true, lunch: 'ok', dinner: 'skip', dinnerNote: '開會' } }
 let view = firstOfMonth(new Date());
 let mode = null;                       // 'work' 點上班日、'bento' 標便當；第一次讀到資料時決定
 let db = null;
@@ -81,12 +81,17 @@ function render() {
         if (s.id === '' && key >= tk && key <= lk) open++;
         const b = document.createElement('button');
         b.className = 'slot ' + s.cls;
-        b.textContent = meal.name + ' ' + s.label;
+        // 「不用」有寫原因就直接顯示原因，太長會被截成「…」，格子大小不變
+        const note = s.id === 'skip' ? r[meal.id + 'Note'] : '';
+        b.textContent = meal.name + (note || s.label);
         b.addEventListener('click', (e) => {
           if (mode !== 'bento') return;
           e.stopPropagation();
+          // 已經是「不用」：打開原因視窗（可改原因或改回未訂）
+          if (s.id === 'skip') { openNote(key, meal); return; }
           const next = STATUS[(STATUS.indexOf(s) + 1) % STATUS.length].id;
           saveDay(key, Object.assign({}, r, { [meal.id]: next }));
+          if (next === 'skip') openNote(key, meal);
         });
         cell.appendChild(b);
       }
@@ -135,6 +140,7 @@ function listen() {
 }
 
 function saveDay(key, r) {
+  for (const meal of MEALS) if (r[meal.id] !== 'skip') delete r[meal.id + 'Note']; // 原因只留給「不用」
   for (const k of Object.keys(r)) if (r[k] === '' || r[k] === undefined) delete r[k];
   if (!r.work) r = {}; // 取消上班，便當紀錄一起清掉
   if (Object.keys(r).length) days[key] = r; else delete days[key];
@@ -143,12 +149,40 @@ function saveDay(key, r) {
   (Object.keys(r).length ? setDoc(ref, r) : deleteDoc(ref)).catch(writeError);
 }
 
+// ---- 「不用」的原因 ----
+let noteFor = null; // { key, meal }
+function openNote(key, meal) {
+  noteFor = { key, meal };
+  const [, mo, d] = key.split('-').map(Number);
+  const wd = new Date(key.slice(0, 4), mo - 1, d).getDay();
+  $('noteTitle').textContent = mo + '/' + d + '（' + WD_NAMES[wd] + '）' + (meal.id === 'lunch' ? '午餐' : '晚餐') + '不用';
+  $('skipNote').value = rec(key)[meal.id + 'Note'] || '';
+  show('noteSheet');
+}
+function saveNote() {
+  if (!noteFor) return;
+  const { key, meal } = noteFor;
+  noteFor = null;
+  const r = rec(key);
+  const text = $('skipNote').value.trim();
+  if (r[meal.id] === 'skip' && text !== (r[meal.id + 'Note'] || '')) saveDay(key, Object.assign({}, r, { [meal.id + 'Note']: text }));
+}
+$('noteDone').addEventListener('click', hide);
+$('noteReset').addEventListener('click', () => {
+  const { key, meal } = noteFor;
+  noteFor = null;
+  saveDay(key, Object.assign({}, rec(key), { [meal.id]: '' }));
+  hide();
+});
+$('skipNote').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); hide(); } });
+
 // ---- 視窗開關與導覽 ----
 function show(id) {
   $('backdrop').classList.add('show');
   $(id).classList.add('show');
 }
 function hide() {
+  saveNote();
   $('backdrop').classList.remove('show');
   document.querySelectorAll('.sheet').forEach((s) => s.classList.remove('show'));
 }

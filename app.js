@@ -5,7 +5,7 @@ import {
   initializeFirestore, persistentLocalCache, persistentMultipleTabManager,
   collection, doc, onSnapshot, setDoc, deleteDoc,
 } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
-import { firebaseConfig } from './firebase-config.js?v=6';
+import { firebaseConfig } from './firebase-config.js?v=7';
 
 // 點一下換下一個狀態
 const STATUS = [
@@ -156,7 +156,14 @@ function openNote(key, meal) {
   $('noteTitle').textContent = mo + '/' + d + '（' + WD_NAMES[wd] + '）' + (meal.id === 'lunch' ? '午餐' : '晚餐') + '不用';
   $('skipNote').value = rec(key)[meal.id + 'Note'] || '';
   show('noteSheet');
+  fitNote();
 }
+function fitNote() {
+  const t = $('skipNote');
+  t.style.height = 'auto';
+  t.style.height = (t.scrollHeight + 2) + 'px';
+}
+$('skipNote').addEventListener('input', fitNote);
 function saveNote() {
   if (!noteFor) return;
   const { key, meal } = noteFor;

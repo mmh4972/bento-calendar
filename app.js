@@ -5,7 +5,7 @@ import {
   initializeFirestore, persistentLocalCache, persistentMultipleTabManager,
   collection, doc, onSnapshot, setDoc, deleteDoc,
 } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
-import { firebaseConfig } from './firebase-config.js?v=5';
+import { firebaseConfig } from './firebase-config.js?v=6';
 
 // 點一下換下一個狀態
 const STATUS = [
@@ -81,9 +81,7 @@ function render() {
         if (s.id === '' && key >= tk && key <= lk) open++;
         const b = document.createElement('button');
         b.className = 'slot ' + s.cls;
-        // 「不用」有寫原因就直接顯示原因，太長會被截成「…」，格子大小不變
-        const note = s.id === 'skip' ? r[meal.id + 'Note'] : '';
-        b.textContent = meal.name + (note || s.label);
+        b.textContent = meal.name + s.label; // 「不用」的原因點進去才看得到
         b.addEventListener('click', (e) => {
           if (mode !== 'bento') return;
           e.stopPropagation();

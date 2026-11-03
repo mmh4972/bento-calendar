@@ -147,7 +147,7 @@ header h1 { flex: 1; text-align: center; font-size: 22px; margin: 0; font-weight
 <div class="sheet" id="noteSheet">
   <h2><span id="noteTitle"></span><button class="close" data-close>✕</button></h2>
   <div class="row-label">為什麼不用？</div>
-  <input id="skipNote" type="text" maxlength="40" placeholder="例如：休假、開會、自己帶" enterkeyhint="done">
+  <input id="skipNote" type="text" maxlength="40" enterkeyhint="done">
   <div class="btn-row">
     <button class="wide-btn" id="noteReset">改回未訂</button>
     <button class="wide-btn primary" id="noteDone">完成</button>
@@ -163,12 +163,12 @@ header h1 { flex: 1; text-align: center; font-size: 22px; margin: 0; font-weight
 </div>
 
 <script>
-window.APP_VERSION = '5';
+window.APP_VERSION = '6';
 window.addEventListener('error', (e) => {
   const d = document.getElementById('err');
   if (d) { d.style.display = 'block'; d.textContent = '程式出錯：' + (e.message || e) + '（版本 ' + window.APP_VERSION + '）'; }
 });
 </script>
-<script type="module" src="app.js?v=5"></script>
+<script type="module" src="app.js?v=6"></script>
 </body>
 </html>

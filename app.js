@@ -5,7 +5,7 @@ import {
   initializeFirestore, persistentLocalCache, persistentMultipleTabManager,
   collection, doc, onSnapshot, setDoc, deleteDoc,
 } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
-import { firebaseConfig } from './firebase-config.js?v=7';
+import { firebaseConfig } from './firebase-config.js?v=8';
 
 // 點一下換下一個狀態
 const STATUS = [
@@ -14,7 +14,7 @@ const STATUS = [
   { id: 'skip', label: '不用', cls: 's-skip' },
 ];
 const MEALS = [{ id: 'lunch', name: '午' }, { id: 'dinner', name: '晚' }];
-const BOOK_DAYS = 7;                   // 醫院系統只能訂一週內（今天起 7 天，例如週六可訂到下週五）
+const OPEN_WEEKDAY = 5;                // 醫院系統每週五開放，一次開到下週四（週四當天還不能訂下一批）
 const WD_NAMES = ['日', '一', '二', '三', '四', '五', '六'];
 const $ = (id) => document.getElementById(id);
 
@@ -30,7 +30,11 @@ function keyOf(d) {
 }
 function todayKey() { return keyOf(new Date()); }
 // 現在最晚能訂到哪一天
-function limitDate() { const d = new Date(); d.setDate(d.getDate() + BOOK_DAYS - 1); return d; }
+function limitDate(d = new Date()) {
+  const r = new Date(d);
+  r.setDate(r.getDate() - (r.getDay() - OPEN_WEEKDAY + 7) % 7 + 6); // 最近一個週五＋6 天
+  return r;
+}
 function rec(key) { return days[key] || {}; }
 function statusOf(id) { return STATUS.find((s) => s.id === (id || '')) || STATUS[0]; }
 function monthKeys() {

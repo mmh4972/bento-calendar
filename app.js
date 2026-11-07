@@ -5,7 +5,7 @@ import {
   initializeFirestore, persistentLocalCache, persistentMultipleTabManager,
   collection, doc, onSnapshot, setDoc, deleteDoc,
 } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
-import { firebaseConfig } from './firebase-config.js?v=8';
+import { firebaseConfig } from './firebase-config.js?v=9';
 
 // 點一下換下一個狀態
 const STATUS = [
@@ -14,7 +14,6 @@ const STATUS = [
   { id: 'skip', label: '不用', cls: 's-skip' },
 ];
 const MEALS = [{ id: 'lunch', name: '午' }, { id: 'dinner', name: '晚' }];
-const OPEN_WEEKDAY = 5;                // 醫院系統每週五開放，一次開到下週四（週四當天還不能訂下一批）
 const WD_NAMES = ['日', '一', '二', '三', '四', '五', '六'];
 const $ = (id) => document.getElementById(id);
 
@@ -30,9 +29,11 @@ function keyOf(d) {
 }
 function todayKey() { return keyOf(new Date()); }
 // 現在最晚能訂到哪一天
+// 醫院系統：週五、六、日可訂到 6 天後；週一到週四不能訂下週，停在本週六
 function limitDate(d = new Date()) {
   const r = new Date(d);
-  r.setDate(r.getDate() - (r.getDay() - OPEN_WEEKDAY + 7) % 7 + 6); // 最近一個週五＋6 天
+  const wd = r.getDay();
+  r.setDate(r.getDate() + (wd >= 1 && wd <= 4 ? 6 - wd : 6));
   return r;
 }
 function rec(key) { return days[key] || {}; }

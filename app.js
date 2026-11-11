@@ -5,7 +5,7 @@ import {
   initializeFirestore, persistentLocalCache, persistentMultipleTabManager,
   collection, doc, onSnapshot, setDoc, deleteDoc,
 } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
-import { firebaseConfig } from './firebase-config.js?v=10';
+import { firebaseConfig } from './firebase-config.js?v=11';
 
 // 點一下換下一個狀態
 const STATUS = [
@@ -54,6 +54,8 @@ function setMode(m) {
 function render() {
   const y = view.getFullYear(), m = view.getMonth();
   $('title').textContent = y + ' 年 ' + (m + 1) + ' 月';
+  const now = new Date();
+  $('todayBtn').classList.toggle('hide', y === now.getFullYear() && m === now.getMonth());
   $('legend').innerHTML = mode === 'work'
     ? '<span>點日子切換：</span><span><i class="dot work"></i>有上班</span><span><i class="dot work later"></i>還不能訂</span><span>白色＝沒上班</span>'
     : '<span>點午／晚切換：</span><span><i class="dot s-none"></i>未訂</span><span><i class="dot s-ok"></i>訂到</span><span><i class="dot s-skip"></i>不用</span>';
@@ -107,18 +109,19 @@ function render() {
     grid.appendChild(cell);
   }
 
-  const canBook = '現在可以訂到 <b>' + (limit.getMonth() + 1) + '/' + limit.getDate() + '（' + WD_NAMES[limit.getDay()] + '）</b>' +
+  const canBook = '可以訂到 <b>' + (limit.getMonth() + 1) + '/' + limit.getDate() + '（' + WD_NAMES[limit.getDay()] + '）</b>' +
     (open ? '，還有 <b class="red">' + open + '</b> 格可以訂' : '');
   if (!count.work) {
     $('summary').innerHTML = (mode === 'work'
       ? '這個月還沒點上班日。直接點日子，有上班的會變黃色。'
       : '這個月還沒有上班日，請先切到「① 點上班日」。') + '<br>' + canBook;
   } else {
-    const part = (name, ok, none) => name + '：<b class="green">' + ok + '</b> 天訂到' + (none ? '、<b class="red">' + none + '</b> 天未訂' : '');
+    // 縮成三行，整頁不用捲動
+    const part = (name, ok, none) => name + ' <b class="green">' + ok + '</b> 訂到' + (none ? ' <b class="red">' + none + '</b> 未訂' : '');
     const boxes = count.lunchOk + count.dinnerOk;
-    $('summary').innerHTML = canBook + '<br>這個月上班 <b>' + count.work + '</b> 天<br>' +
-      part('午餐', count.lunchOk, count.lunchNone) + '<br>' + part('晚餐', count.dinnerOk, count.dinnerNone) +
-      '<br>本月便當花費：<b>' + boxes + '</b> 個 × ' + PRICE + ' 元 ＝ <b class="cost">' + (boxes * PRICE).toLocaleString() + ' 元</b>';
+    $('summary').innerHTML = canBook + '<br>本月上班 <b>' + count.work + '</b> 天｜' +
+      part('午', count.lunchOk, count.lunchNone) + '｜' + part('晚', count.dinnerOk, count.dinnerNone) +
+      '<br>本月花費：<b>' + boxes + '</b> 個 × ' + PRICE + ' 元 ＝ <b class="cost">' + (boxes * PRICE).toLocaleString() + ' 元</b>';
   }
 }
 

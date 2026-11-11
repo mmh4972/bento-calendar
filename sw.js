@@ -1,6 +1,6 @@
 // 離線快取：改了網頁檔案後，把版本號加一，手機才會抓到新版
-const CACHE = 'bento-calendar-v10';
-const FILES = ['./', 'index.html', 'app.js?v=10', 'firebase-config.js?v=10', 'manifest.json', 'icon-180.png', 'icon-192.png', 'icon-512.png'];
+const CACHE = 'bento-calendar-v11';
+const FILES = ['./', 'index.html', 'app.js?v=11', 'firebase-config.js?v=11', 'manifest.json', 'icon-180.png', 'icon-192.png', 'icon-512.png'];
 // Firebase 程式庫也存起來，沒網路時才打得開
 const SDK = 'https://www.gstatic.com/firebasejs/';
 

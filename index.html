@@ -55,6 +55,7 @@ header h1 { flex: 1; text-align: center; font-size: 22px; margin: 0; font-weight
 .summary { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; font-size: 15px; margin-bottom: 10px; line-height: 1.6; }
 .summary b.red { color: var(--red); }
 .summary b.green { color: var(--green); }
+.summary b.cost { color: var(--accent); }
 /* 月曆撐滿螢幕剩下的高度 */
 #app { display: flex; flex-direction: column; min-height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 18px); }
 .weekdays, .grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 3px; }
@@ -71,9 +72,10 @@ header h1 { flex: 1; text-align: center; font-size: 22px; margin: 0; font-weight
 .cell.work.later { background: var(--later-bg); border-style: dashed; }
 .cell.past { opacity: .6; }
 .cell.other { opacity: .35; }
-.cell.today { outline: 2px solid var(--today); outline-offset: -2px; }
+/* 今天：粗藍框＋日期做成藍底白字，一眼就找得到 */
+.cell.today { outline: 3px solid var(--today); outline-offset: -3px; }
 .num { font-size: 16px; font-weight: 600; padding-left: 2px; line-height: 20px; }
-.cell.today .num { color: var(--today); }
+.cell.today .num { align-self: flex-start; background: var(--today); color: #fff; border-radius: 10px; padding: 0 7px; margin: 1px 0 0 1px; }
 .slot { font-size: 13px; line-height: 26px; letter-spacing: -.5px; border-radius: 5px; text-align: center; font-weight: 600; border: none; padding: 0 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: none; }
 .s-none { background: var(--card); color: var(--red); box-shadow: inset 0 0 0 1px var(--red); }
 .s-ok { background: var(--green-bg); color: var(--green); }
@@ -164,12 +166,12 @@ header h1 { flex: 1; text-align: center; font-size: 22px; margin: 0; font-weight
 </div>
 
 <script>
-window.APP_VERSION = '9';
+window.APP_VERSION = '10';
 window.addEventListener('error', (e) => {
   const d = document.getElementById('err');
   if (d) { d.style.display = 'block'; d.textContent = '程式出錯：' + (e.message || e) + '（版本 ' + window.APP_VERSION + '）'; }
 });
 </script>
-<script type="module" src="app.js?v=9"></script>
+<script type="module" src="app.js?v=10"></script>
 </body>
 </html>

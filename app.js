@@ -5,7 +5,7 @@ import {
   initializeFirestore, persistentLocalCache, persistentMultipleTabManager,
   collection, doc, onSnapshot, setDoc, deleteDoc,
 } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
-import { firebaseConfig } from './firebase-config.js?v=9';
+import { firebaseConfig } from './firebase-config.js?v=10';
 
 // 點一下換下一個狀態
 const STATUS = [
@@ -13,6 +13,7 @@ const STATUS = [
   { id: 'ok', label: '訂到', cls: 's-ok' },
   { id: 'skip', label: '不用', cls: 's-skip' },
 ];
+const PRICE = 80;                      // 一個便當 80 元
 const MEALS = [{ id: 'lunch', name: '午' }, { id: 'dinner', name: '晚' }];
 const WD_NAMES = ['日', '一', '二', '三', '四', '五', '六'];
 const $ = (id) => document.getElementById(id);
@@ -114,8 +115,10 @@ function render() {
       : '這個月還沒有上班日，請先切到「① 點上班日」。') + '<br>' + canBook;
   } else {
     const part = (name, ok, none) => name + '：<b class="green">' + ok + '</b> 天訂到' + (none ? '、<b class="red">' + none + '</b> 天未訂' : '');
+    const boxes = count.lunchOk + count.dinnerOk;
     $('summary').innerHTML = canBook + '<br>這個月上班 <b>' + count.work + '</b> 天<br>' +
-      part('午餐', count.lunchOk, count.lunchNone) + '<br>' + part('晚餐', count.dinnerOk, count.dinnerNone);
+      part('午餐', count.lunchOk, count.lunchNone) + '<br>' + part('晚餐', count.dinnerOk, count.dinnerNone) +
+      '<br>本月便當花費：<b>' + boxes + '</b> 個 × ' + PRICE + ' 元 ＝ <b class="cost">' + (boxes * PRICE).toLocaleString() + ' 元</b>';
   }
 }
 
